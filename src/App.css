@@ -162,6 +162,7 @@ h1 {
   .form select,
   .form button {
     flex: 1 1 100%;
+    width: auto;
   }
 
   .list-item {
