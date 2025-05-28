@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { db } from '../firebase/config';
 import { collection, addDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { deslogar } from '../firebase/auth';
+import { useAuth } from '../firebase/AuthProvider';
 
 function Dashboard() {
   const [data, setData] = useState([]);
@@ -11,6 +13,8 @@ function Dashboard() {
   const [status, setStatus] = useState('Pendente');
   const navigate = useNavigate();
   const [dataLancamento, setDataLancamento] = useState('');
+  const { user } = useAuth();
+
 
 
   useEffect(() => {
@@ -42,6 +46,7 @@ function Dashboard() {
       descricao,
       valor: parseFloat(valor),
       status,
+      uid: user.uid,
       createdAt: serverTimestamp(),
     });
 
@@ -58,6 +63,7 @@ function Dashboard() {
   return (
     <div className="container">
       <h1>CtrlFin</h1>
+      <button onClick={deslogar}>Sair</button>
 
       <div className="dashboard">
         <div className="card" onClick={() => handleNavigate('receitas')}>
