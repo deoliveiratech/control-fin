@@ -62,23 +62,23 @@ function Dashboard() {
       <div className="dashboard">
         <div className="card" onClick={() => handleNavigate('receitas')}>
           Receitas:
-          <strong> R$ {totalReceitas.toFixed(2)}</strong>
+          <strong style={{color: 'green'}}> R$ {totalReceitas.toFixed(2)}</strong>
         </div>
         <div className="card" onClick={() => handleNavigate('despesas')}>
           Despesas:
-          <strong> R$ {totalDespesas.toFixed(2)}</strong>
+          <strong style={{color: '#ff3e3e'}}> R$ {totalDespesas.toFixed(2)}</strong>
         </div>
         <div className="card" onClick={() => handleNavigate('pendentes-receber')}>
           À Receber:
-          <strong> R$ {pendReceber.toFixed(2)}</strong>
+          <strong style={{color: '#dd5400'}}> R$ {pendReceber.toFixed(2)}</strong>
         </div>
         <div className="card" onClick={() => handleNavigate('pendentes-pagar')}>
           À Pagar:
-          <strong> R$ {pendPagar.toFixed(2)}</strong>
+          <strong style={{color: '#dd5400'}}> R$ {pendPagar.toFixed(2)}</strong>
         </div>
         <div className="card">
           <h3>Saldo</h3>
-          <strong>R$ {saldo.toFixed(2)}</strong>
+          <strong style={{color: '#6b6bff', fontSize: '1.1rem'}}>R$ {saldo.toFixed(2)}</strong>
         </div>
       </div>
 
