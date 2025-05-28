@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, serverTimestamp, query, where, orderBy } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { deslogar } from '../firebase/auth';
 import { useAuth } from '../firebase/AuthProvider';
@@ -15,15 +15,26 @@ function Dashboard() {
   const [dataLancamento, setDataLancamento] = useState('');
   const { user } = useAuth();
 
-
-
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'finance'), (snapshot) => {
+
+    if(!user) return;
+
+    const q = query(
+      collection(db, 'finance'),
+      where('uid', '==', user.uid)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      if(snapshot.empty){
+        console.log('Nenhum registro encontrado!')
+        setData([]);
+        return;
+      }
       const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setData(items);
     });
     return () => unsub();
-  }, []);
+  }, [user]);
 
   const receitas = data.filter((i) => i.tipo === 'Receita');
   const despesas = data.filter((i) => i.tipo === 'Despesa');

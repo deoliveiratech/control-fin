@@ -1,25 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase/config';
-import { collection, onSnapshot, deleteDoc, doc, updateDoc, orderBy, query  } from 'firebase/firestore';
+import { collection, onSnapshot, deleteDoc, doc, updateDoc, orderBy, query, where, getDocs  } from 'firebase/firestore';
+import { useAuth } from '../firebase/AuthProvider';
 
 function FinanceList() {
   const { type } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const q = query(
+
+  const fetchData = async () => {
+  const q = query(
     collection(db, 'finance'),
-    orderBy('data', 'asc') // Mais recente primeiro
-    );
+    where('uid', '==', user.uid)
+  );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const snapshot = await getDocs(q);
 
-      setData(items);
-    });
-    return () => unsub();
+  if (snapshot.empty) {
+    console.log('Nenhum dado encontrado');
+    return;
+  }
+
+  const items = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  setData(items);
+
+};
+
+fetchData();
+
   }, []);
 
   const filterData = () => {

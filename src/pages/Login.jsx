@@ -16,6 +16,7 @@ function Login() {
         navigate('/dash');
       } else {
         await cadastrar(email, senha);
+        navigate('/dash');
       }
     } catch (err) {
       alert('Erro: ' + err.message);
