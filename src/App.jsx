@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import FinanceList from './pages/FinanceList';
 import { AuthProvider } from './firebase/AuthProvider';
 import Login from './pages/Login';
+import PrivateRoute from './components/PrivateRoute';
 
 import './App.css'
 
@@ -13,8 +14,19 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/dash" element={<Dashboard />} />
-          <Route path="/list/:type" element={<FinanceList />} />
+          
+            <Route path="/dash" element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+              }/>
+
+            <Route path="/list/:type" element={
+              <PrivateRoute>
+                <FinanceList />
+              </PrivateRoute>
+              }/>
+          
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -60,10 +60,19 @@ function Dashboard() {
     navigate(`/list/${type}`);
   };
 
+  const handleLogout = async () => {
+    try { await deslogar();
+      navigate('/');
+      
+    } catch (error) {
+      console.log('Erro ao deslogar: ', error);
+    }
+  }
+
   return (
     <div className="container">
       <h1>CtrlFin</h1>
-      <button onClick={deslogar}>Sair</button>
+      <button onClick={handleLogout}>Sair</button>
 
       <div className="dashboard">
         <div className="card" onClick={() => handleNavigate('receitas')}>

@@ -23,9 +23,9 @@ function Login() {
   };
 
   return (
-    <div className="container">
+    <div className="container-login">
       <h1>{isLogin ? 'Login' : 'Cadastro'}</h1>
-      <form onSubmit={handleSubmit} className="form">
+      <form onSubmit={handleSubmit} className="form-login">
         <input
           type="email"
           placeholder="E-mail"
