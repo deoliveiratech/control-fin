@@ -44,7 +44,7 @@ function Login() {
       </form>
       <p>
         {isLogin ? 'Não tem conta?' : 'Já tem conta?'}{' '}
-        <button onClick={() => setIsLogin(!isLogin)}>
+        <button className='btnCadastroUser' onClick={() => setIsLogin(!isLogin)}>
           {isLogin ? 'Cadastrar' : 'Fazer Login'}
         </button>
       </p>

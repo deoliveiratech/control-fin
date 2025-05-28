@@ -71,9 +71,10 @@ function Dashboard() {
 
   return (
     <div className="container">
-      <h1>CtrlFin</h1>
+      <div className='dash-header'>
+        <h1>CtrlFin</h1>
       <button onClick={handleLogout}>Sair</button>
-
+      </div>
       <div className="dashboard">
         <div className="card" onClick={() => handleNavigate('receitas')}>
           Receitas:

@@ -60,7 +60,7 @@ function FinanceList() {
   return (
     <div className="container">
       <h1>{titleMap[type]}</h1>
-      <button onClick={() => navigate('/')}>← Voltar</button>
+      <button onClick={() => navigate('/dash')}>← Voltar</button>
 
       <div className="list">
         {filterData().map((item) => (
