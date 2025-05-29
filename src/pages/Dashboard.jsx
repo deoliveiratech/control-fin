@@ -4,6 +4,7 @@ import { collection, addDoc, onSnapshot, serverTimestamp, query, where, orderBy 
 import { useNavigate } from 'react-router-dom';
 import { deslogar } from '../firebase/auth';
 import { useAuth } from '../firebase/AuthProvider';
+import InstallButton from '../components/InstallButton';
 
 function Dashboard() {
   const [data, setData] = useState([]);
@@ -84,6 +85,7 @@ function Dashboard() {
     <div className="container">
       <div className='dash-header'>
         <h1>CtrlFin</h1>
+        <InstallButton />
       <button onClick={handleLogout}>Sair</button>
       </div>
       <div className="dashboard">

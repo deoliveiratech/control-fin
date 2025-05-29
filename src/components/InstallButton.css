@@ -1,0 +1,20 @@
+.install-button {
+  background-color: #2d89ef;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.install-button:hover {
+  background-color: #1b5dab;
+}
+
+.installed-text {
+  color: green;
+  font-weight: bold;
+  font-size: 16px;
+}

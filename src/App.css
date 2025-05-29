@@ -221,7 +221,7 @@ h1 {
 .container-login {
   max-width: 400px;
   flex-direction: column;
-  margin: auto;
+  margin: 0 auto;
   margin-top: 5px;;
   padding: 2px;
 }
