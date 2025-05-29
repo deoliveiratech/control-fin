@@ -267,3 +267,28 @@ h1 {
   background-color: var(--accent-hover);
 }
 /*FIM*/
+
+/* Coloque isso no seu styles.css ou App.css */
+
+.install-btn-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+.install-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.install-btn:hover {
+  background-color: #0056b3;
+}

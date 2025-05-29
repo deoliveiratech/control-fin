@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cadastrar, logar } from '../firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import InstallPWA from '../components/InstallPWA';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -49,6 +50,8 @@ function Login() {
           {isLogin ? 'Cadastrar' : 'Fazer Login'}
         </button>
       </p>
+
+      <InstallPWA />
     </div>
   );
 }
