@@ -292,3 +292,14 @@ h1 {
 .install-btn:hover {
   background-color: #0056b3;
 }
+
+.install-button-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  /* position: fixed;
+  bottom: 20px;
+  right: 20px; */
+  /* z-index: 1111; */
+}
