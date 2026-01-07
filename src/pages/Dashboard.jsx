@@ -15,6 +15,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [dataLancamento, setDataLancamento] = useState('');
   const { user } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // State for current month selection
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -90,6 +91,7 @@ function Dashboard() {
     setDataLancamento('');
     setValor('');
     setStatus('Pendente');
+    setIsModalOpen(false);
   };
 
   const handleNavigate = (type) => {
@@ -113,6 +115,49 @@ function Dashboard() {
     setCurrentDate(newDate);
   };
 
+  const copyToNextMonth = async () => {
+    if (filteredData.length === 0) {
+      alert("Não há lançamentos para copiar neste mês.");
+      return;
+    }
+
+    if (!window.confirm(`Deseja copiar ${filteredData.length} lançamentos para o próximo mês?`)) {
+      return;
+    }
+
+    try {
+      const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+
+      const promises = filteredData.map(item => {
+        // Create a new date for the next month, keeping the same day if possible
+        const itemDate = item.data.toDate();
+        const newDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), itemDate.getDate());
+
+        // Ensure the day is valid for the next month (e.g., Jan 31 -> Feb 28)
+        if (newDate.getMonth() !== nextMonth.getMonth()) {
+          newDate.setDate(0); // Last day of the intended month
+        }
+
+        return addDoc(collection(db, 'finance'), {
+          tipo: item.tipo,
+          data: newDate,
+          descricao: item.descricao,
+          valor: item.valor,
+          status: 'Pendente',
+          uid: user.uid,
+          createdAt: serverTimestamp(),
+        });
+      });
+
+      await Promise.all(promises);
+      alert("Lançamentos copiados com sucesso!");
+      changeMonth(1);
+    } catch (error) {
+      console.error("Erro ao copiar lançamentos:", error);
+      alert("Erro ao copiar lançamentos.");
+    }
+  };
+
   const formatMonthYear = (date) => {
     return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   };
@@ -124,10 +169,10 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 pb-20">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Header */}
-        <header className="flex justify-between items-center py-4 border-b border-zinc-800">
+        <header className="flex justify-between items-center py-2 border-b border-zinc-800">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
             CtrlFin
           </h1>
@@ -135,7 +180,7 @@ function Dashboard() {
             <InstallButton />
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium"
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium"
             >
               Sair
             </button>
@@ -144,42 +189,31 @@ function Dashboard() {
 
         {/* Month Selector */}
         <div className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-xl border border-zinc-800">
-          <button
-            onClick={() => changeMonth(-1)}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-          >
-            <span className="text-xl">←</span>
-          </button>
-          <h2 className="text-lg font-semibold capitalize">
-            {formatMonthYear(currentDate)}
-          </h2>
-          <button
-            onClick={() => changeMonth(1)}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-          >
-            <span className="text-xl">→</span>
-          </button>
-        </div>
-
-        {/* Visual Chart */}
-        <div className="bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800">
-          <h3 className="text-sm font-medium text-zinc-400 mb-6">Visão Mensal</h3>
-          <div className="flex justify-around items-end h-32 gap-4">
-            <div className="flex flex-col items-center flex-1 max-w-[100px]">
-              <div
-                style={{ height: `${receitaHeight}%` }}
-                className="w-full bg-emerald-500/20 border-t-2 border-emerald-500 rounded-t-lg transition-all duration-500 min-h-[4px]"
-              />
-              <span className="mt-2 text-xs text-zinc-400">Receitas</span>
-            </div>
-            <div className="flex flex-col items-center flex-1 max-w-[100px]">
-              <div
-                style={{ height: `${despesaHeight}%` }}
-                className="w-full bg-rose-500/20 border-t-2 border-rose-500 rounded-t-lg transition-all duration-500 min-h-[4px]"
-              />
-              <span className="mt-2 text-xs text-zinc-400">Despesas</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => changeMonth(-1)}
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <span className="text-xl">←</span>
+            </button>
+            <h2 className="text-lg font-semibold capitalize">
+              {formatMonthYear(currentDate)}
+            </h2>
+            <button
+              onClick={() => changeMonth(1)}
+              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+            >
+              <span className="text-xl">→</span>
+            </button>
           </div>
+
+          <button
+            onClick={copyToNextMonth}
+            className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg transition-colors text-xs font-bold flex items-center gap-2"
+          >
+            <span>📋</span>
+            <span className="hidden sm:inline">Copiar para Próximo Mês</span>
+          </button>
         </div>
 
         {/* Stats Grid */}
@@ -218,13 +252,36 @@ function Dashboard() {
         </div>
 
         {/* Saldo Card */}
-        <div className="p-6 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-indigo-500/10">
+        <div className="p-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-indigo-500/10">
           <p className="text-indigo-100 text-sm font-medium opacity-80">Saldo do Mês</p>
           <h2 className="text-3xl font-bold text-white mt-1">R$ {saldo.toFixed(2)}</h2>
         </div>
 
+        {/* Visual Chart */}
+        <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-medium text-zinc-400">Visão Mensal</h3>
+          </div>
+          <div className="flex justify-around items-end h-24 gap-4">
+            <div className="flex flex-col items-center flex-1 max-w-[100px]">
+              <div
+                style={{ height: `${receitaHeight}%` }}
+                className="w-full bg-emerald-500/20 border-t-2 border-emerald-500 rounded-t-lg transition-all duration-500 min-h-[4px]"
+              />
+              <span className="mt-2 text-xs text-zinc-400">Receitas</span>
+            </div>
+            <div className="flex flex-col items-center flex-1 max-w-[100px]">
+              <div
+                style={{ height: `${despesaHeight}%` }}
+                className="w-full bg-rose-500/20 border-t-2 border-rose-500 rounded-t-lg transition-all duration-500 min-h-[4px]"
+              />
+              <span className="mt-2 text-xs text-zinc-400">Despesas</span>
+            </div>
+          </div>
+        </div>
+
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3">
           <button
             onClick={() => navigate('/sales')}
             className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl hover:bg-zinc-800 transition-colors"
@@ -238,80 +295,116 @@ function Dashboard() {
             </div>
             <span className="text-zinc-500">→</span>
           </button>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-between p-4 bg-indigo-600/10 border border-indigo-500/30 rounded-2xl hover:bg-indigo-600/20 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">➕</span>
+              <div className="text-left">
+                <p className="font-semibold text-indigo-400">Novo Lançamento</p>
+                <p className="text-xs text-indigo-400/60">Adicionar receita ou despesa</p>
+              </div>
+            </div>
+            <span className="text-indigo-500 group-hover:translate-x-1 transition-transform">→</span>
+          </button>
         </div>
 
-        {/* Form Section */}
-        <section className="bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800">
-          <h3 className="text-lg font-semibold mb-4">Novo Lançamento</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-400 ml-1">Tipo</label>
-                <select
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+        {/* Modal Novo Lançamento */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-zinc-900 w-full max-w-lg rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="flex justify-between items-center p-6 border-b border-zinc-800">
+                <h3 className="text-xl font-bold">Novo Lançamento</h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400"
                 >
-                  <option value="Receita">Receita</option>
-                  <option value="Despesa">Despesa</option>
-                </select>
+                  ✕
+                </button>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-400 ml-1">Data</label>
-                <input
-                  type="date"
-                  value={dataLancamento}
-                  onChange={(e) => setDataLancamento(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-400 ml-1">Tipo</label>
+                    <select
+                      value={tipo}
+                      onChange={(e) => setTipo(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+                    >
+                      <option value="Receita">Receita</option>
+                      <option value="Despesa">Despesa</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-400 ml-1">Data</label>
+                    <input
+                      type="date"
+                      value={dataLancamento}
+                      onChange={(e) => setDataLancamento(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-zinc-400 ml-1">Descrição</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Aluguel, Supermercado..."
+                    value={descricao}
+                    onChange={(e) => setDescricao(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-400 ml-1">Valor</label>
+                    <input
+                      type="number"
+                      placeholder="0,00"
+                      value={valor}
+                      onChange={(e) => setValor(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-400 ml-1">Status</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
+                    >
+                      <option value="Pendente">Pendente</option>
+                      <option value="Pago">Pago</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold rounded-xl transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-[2] bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98]"
+                  >
+                    Adicionar Registro
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-xs text-zinc-400 ml-1">Descrição</label>
-              <input
-                type="text"
-                placeholder="Ex: Aluguel, Supermercado..."
-                value={descricao}
-                onChange={(e) => setDescricao(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-400 ml-1">Valor</label>
-                <input
-                  type="number"
-                  placeholder="0,00"
-                  value={valor}
-                  onChange={(e) => setValor(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-400 ml-1">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500 transition-colors"
-                >
-                  <option value="Pendente">Pendente</option>
-                  <option value="Pago">Pago</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-[0.98]"
-            >
-              Adicionar Registro
-            </button>
-          </form>
-        </section>
+          </div>
+        )}
       </div>
     </div>
   );

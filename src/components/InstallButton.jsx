@@ -49,9 +49,9 @@ export default function InstallButton() {
     setShowInstallButton(false);
   };
 
-  if (isInstalled) {
-    return <p className="installed-text">✅ App instalado</p>;
-  }
+  // if (isInstalled) {
+  //   return <p className="installed-text">✅ App instalado</p>;
+  // }
 
   return (
     <>

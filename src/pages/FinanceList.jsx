@@ -72,7 +72,15 @@ function FinanceList() {
   };
 
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, 'finance', id));
+    if (window.confirm('Tem certeza que deseja excluir este registro?')) {
+      try {
+        await deleteDoc(doc(db, 'finance', id));
+        setData(prev => prev.filter(item => item.id !== id));
+      } catch (error) {
+        console.error("Erro ao excluir registro:", error);
+        alert("Erro ao excluir registro: " + error.message);
+      }
+    }
   };
 
   const handleStatusChange = async (id, status) => {

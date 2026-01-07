@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot, doc, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, doc, deleteDoc, updateDoc, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../firebase/AuthProvider';
 
@@ -24,12 +24,31 @@ function SalesItemList({ setItemEdit }) {
 
     const handleDelete = async (id) => {
         if (window.confirm('Tem certeza que deseja excluir este item?')) {
-            await deleteDoc(doc(db, 'items', id));
+            try {
+                await deleteDoc(doc(db, 'items', id));
+                console.log("Item excluído com sucesso:", id);
+            } catch (error) {
+                console.error("Erro ao excluir item:", error);
+                alert("Erro ao excluir item. Verifique o console.");
+            }
         }
     };
 
-    const handleStatusChange = async (id, status) => {
-        await updateDoc(doc(db, 'items', id), { status });
+    const handleStatusChange = async (item, newStatus) => {
+        const oldStatus = item.status;
+        await updateDoc(doc(db, 'items', item.id), { status: newStatus });
+
+        if (newStatus === 'Vendido' && oldStatus !== 'Vendido') {
+            await addDoc(collection(db, 'finance'), {
+                tipo: 'Receita',
+                data: new Date(),
+                descricao: `Venda: ${item.nome}`,
+                valor: item.valor,
+                status: 'Pago',
+                uid: user.uid,
+                createdAt: serverTimestamp(),
+            });
+        }
     };
 
     return (
@@ -46,7 +65,7 @@ function SalesItemList({ setItemEdit }) {
                         <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-2">
                                 <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${item.status === 'Vendido' ? 'bg-emerald-500/10 text-emerald-500' :
-                                        item.status === 'Anunciado' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-amber-500/10 text-amber-500'
+                                    item.status === 'Anunciado' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-amber-500/10 text-amber-500'
                                     }`}>
                                     {item.status}
                                 </span>
@@ -68,9 +87,9 @@ function SalesItemList({ setItemEdit }) {
                         <div className="flex items-center gap-3">
                             <select
                                 value={item.status}
-                                onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                onChange={(e) => handleStatusChange(item, e.target.value)}
                                 className={`bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500 transition-colors ${item.status === 'Vendido' ? 'text-emerald-500' :
-                                        item.status === 'Anunciado' ? 'text-indigo-500' : 'text-amber-500'
+                                    item.status === 'Anunciado' ? 'text-indigo-500' : 'text-amber-500'
                                     }`}
                             >
                                 <option value="Pendente">Pendente</option>

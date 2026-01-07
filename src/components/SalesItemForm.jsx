@@ -24,26 +24,52 @@ function SalesItemForm({ itemEdit, setItemEdit }) {
         e.preventDefault();
         if (!nome || !valor || !user) return;
 
+        const itemData = {
+            nome,
+            valor: parseFloat(valor),
+            observacao,
+            status,
+            uid: user.uid,
+        };
+
         if (itemEdit) {
             // Atualizar item existente
             const docRef = doc(db, 'items', itemEdit.id);
-            await updateDoc(docRef, {
-                nome,
-                valor: parseFloat(valor),
-                observacao,
-                status,
-            });
+            await updateDoc(docRef, itemData);
+
+            // Se mudou para vendido agora, ou se já era vendido e foi editado (opcional, mas vamos focar na transição ou novo)
+            // Para simplificar, se o status final for Vendido, e for uma transição ou novo, lançamos.
+            // No entanto, o usuário pediu: "nos registros de vendas que eu marcar como vendido, esse registro com os dados e valor ser lançado automaticamente nas receitas"
+            if (status === 'Vendido' && itemEdit.status !== 'Vendido') {
+                await addDoc(collection(db, 'finance'), {
+                    tipo: 'Receita',
+                    data: new Date(),
+                    descricao: `Venda: ${nome}`,
+                    valor: parseFloat(valor),
+                    status: 'Pago',
+                    uid: user.uid,
+                    createdAt: serverTimestamp(),
+                });
+            }
             setItemEdit(null); // limpa o modo de edição
         } else {
             // Cadastrar novo
             await addDoc(collection(db, 'items'), {
-                nome,
-                valor: parseFloat(valor),
-                observacao,
-                status,
-                uid: user.uid, // Add UID
+                ...itemData,
                 createdAt: serverTimestamp(),
             });
+
+            if (status === 'Vendido') {
+                await addDoc(collection(db, 'finance'), {
+                    tipo: 'Receita',
+                    data: new Date(),
+                    descricao: `Venda: ${nome}`,
+                    valor: parseFloat(valor),
+                    status: 'Pago',
+                    uid: user.uid,
+                    createdAt: serverTimestamp(),
+                });
+            }
         }
 
         // Limpar campos
@@ -62,8 +88,7 @@ function SalesItemForm({ itemEdit, setItemEdit }) {
     };
 
     return (
-        <section className="bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800">
-            <h3 className="text-lg font-semibold mb-4">{itemEdit ? 'Editar Item' : 'Novo Item'}</h3>
+        <>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -130,7 +155,7 @@ function SalesItemForm({ itemEdit, setItemEdit }) {
                     )}
                 </div>
             </form>
-        </section>
+        </>
     );
 }
 
