@@ -10,13 +10,11 @@ export default function InstallButton() {
   const isInStandaloneMode = () =>
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true;
-    console.log(showInstallButton);
 
   useEffect(() => {
     if (isInStandaloneMode()) {
       setIsInstalled(true);
       setShowInstallButton(false);
-      console.log('App já instalado ou em modo standalone');
       return;
     }
 
