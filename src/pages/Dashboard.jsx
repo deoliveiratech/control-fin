@@ -260,6 +260,12 @@ function Dashboard() {
 
       <div className="max-w-4xl mx-auto space-y-4 px-4 pt-4">
 
+        {/* Saldo Card */}
+        <div className="p-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-indigo-500/10">
+          <p className="text-indigo-100 text-sm font-medium opacity-80">Saldo do Mês</p>
+          <h2 className="text-3xl font-bold text-white mt-1">R$ {saldo.toFixed(2)}</h2>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
@@ -295,11 +301,7 @@ function Dashboard() {
           </button>
         </div>
 
-        {/* Saldo Card */}
-        <div className="p-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl shadow-indigo-500/10">
-          <p className="text-indigo-100 text-sm font-medium opacity-80">Saldo do Mês</p>
-          <h2 className="text-3xl font-bold text-white mt-1">R$ {saldo.toFixed(2)}</h2>
-        </div>
+
 
         {/* Visual Chart
         <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
