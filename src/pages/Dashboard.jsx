@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, serverTimestamp, query, where, orderBy, Timestamp } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
+import { collection, addDoc, onSnapshot, serverTimestamp, query, where } from 'firebase/firestore';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { deslogar } from '../firebase/auth';
 import { useAuth } from '../firebase/AuthProvider';
 import InstallButton from '../components/InstallButton';
@@ -13,12 +13,39 @@ function Dashboard() {
   const [valor, setValor] = useState('');
   const [status, setStatus] = useState('Pendente');
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const monthParam = searchParams.get('month');
   const [dataLancamento, setDataLancamento] = useState('');
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // State for current month selection
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (monthParam) {
+      const [year, month] = monthParam.split('-');
+      const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (!isNaN(d.getTime())) {
+        return d;
+      }
+    }
+    return new Date();
+  });
+
+  // Sync date selection with query param updates (e.g. back button navigation)
+  useEffect(() => {
+    if (monthParam) {
+      const [year, month] = monthParam.split('-');
+      const d = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (!isNaN(d.getTime())) {
+        setCurrentDate(prev => {
+          if (prev.getFullYear() !== d.getFullYear() || prev.getMonth() !== d.getMonth()) {
+            return d;
+          }
+          return prev;
+        });
+      }
+    }
+  }, [monthParam]);
 
   useEffect(() => {
     if (!user) {
@@ -113,6 +140,8 @@ function Dashboard() {
   const changeMonth = (offset) => {
     const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
     setCurrentDate(newDate);
+    const monthStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`;
+    setSearchParams({ month: monthStr });
   };
 
   const copyToNextMonth = async () => {
@@ -168,53 +197,68 @@ function Dashboard() {
   const despesaHeight = (totalDespesas / maxVal) * 100;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 pb-20">
-      <div className="max-w-4xl mx-auto space-y-4">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
+      {/* Sticky Header + Month Selector */}
+      <div className="sticky top-0 z-40 bg-zinc-950/80 border-b border-zinc-800/60 backdrop-blur-md px-4 pt-4 pb-2">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {/* Header */}
+          <header className="flex justify-between items-center py-2">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              CtrlFin
+            </h1>
+            <div className="flex items-center gap-4">
+              <InstallButton />
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium"
+              >
+                Sair
+              </button>
+            </div>
+          </header>
 
-        {/* Header */}
-        <header className="flex justify-between items-center py-2 border-b border-zinc-800">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-            CtrlFin
-          </h1>
-          <div className="flex items-center gap-4">
-            <InstallButton />
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors text-sm font-medium"
-            >
-              Sair
-            </button>
+          {/* Month Selector */}
+          <div className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-xl border border-zinc-800 gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <span className="text-xl">←</span>
+              </button>
+              <h2 className="text-lg font-semibold capitalize">
+                {formatMonthYear(currentDate)}
+              </h2>
+              <button
+                onClick={() => changeMonth(1)}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <span className="text-xl">→</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-lg transition-colors text-xs font-bold flex items-center gap-2"
+              >
+                <span>➕</span>
+                <span className="hidden sm:inline">Novo Lançamento</span>
+              </button>
+
+              <button
+                onClick={copyToNextMonth}
+                className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg transition-colors text-xs font-bold flex items-center gap-2"
+              >
+                <span>📋</span>
+                <span className="hidden sm:inline">Copiar para Próximo Mês</span>
+              </button>
+            </div>
           </div>
-        </header>
-
-        {/* Month Selector */}
-        <div className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-xl border border-zinc-800">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <span className="text-xl">←</span>
-            </button>
-            <h2 className="text-lg font-semibold capitalize">
-              {formatMonthYear(currentDate)}
-            </h2>
-            <button
-              onClick={() => changeMonth(1)}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <span className="text-xl">→</span>
-            </button>
-          </div>
-
-          <button
-            onClick={copyToNextMonth}
-            className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-lg transition-colors text-xs font-bold flex items-center gap-2"
-          >
-            <span>📋</span>
-            <span className="hidden sm:inline">Copiar para Próximo Mês</span>
-          </button>
         </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto space-y-4 px-4 pt-4">
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -257,7 +301,7 @@ function Dashboard() {
           <h2 className="text-3xl font-bold text-white mt-1">R$ {saldo.toFixed(2)}</h2>
         </div>
 
-        {/* Visual Chart */}
+        {/* Visual Chart
         <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-medium text-zinc-400">Visão Mensal</h3>
@@ -278,38 +322,9 @@ function Dashboard() {
               <span className="mt-2 text-xs text-zinc-400">Despesas</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-3">
-          <button
-            onClick={() => navigate('/sales')}
-            className="flex items-center justify-between p-4 bg-zinc-900 border border-zinc-800 rounded-2xl hover:bg-zinc-800 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📦</span>
-              <div className="text-left">
-                <p className="font-semibold">Gerenciar Vendas</p>
-                <p className="text-xs text-zinc-400">Controle de itens parados</p>
-              </div>
-            </div>
-            <span className="text-zinc-500">→</span>
-          </button>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-between p-4 bg-indigo-600/10 border border-indigo-500/30 rounded-2xl hover:bg-indigo-600/20 transition-colors group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">➕</span>
-              <div className="text-left">
-                <p className="font-semibold text-indigo-400">Novo Lançamento</p>
-                <p className="text-xs text-indigo-400/60">Adicionar receita ou despesa</p>
-              </div>
-            </div>
-            <span className="text-indigo-500 group-hover:translate-x-1 transition-transform">→</span>
-          </button>
-        </div>
 
         {/* Modal Novo Lançamento */}
         {isModalOpen && (

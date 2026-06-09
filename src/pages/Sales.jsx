@@ -14,9 +14,10 @@ function Sales() {
     }, [itemEdit]);
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 pb-20">
-            <div className="max-w-4xl mx-auto space-y-4">
-                <header className="flex justify-between items-center py-2 border-b border-zinc-800">
+        <div className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/60 px-4 py-4 mb-4">
+                <div className="max-w-4xl mx-auto flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-zinc-100">Controle de Vendas</h1>
                     <button
                         onClick={() => navigate('/dash')}
@@ -24,7 +25,10 @@ function Sales() {
                     >
                         ← Voltar
                     </button>
-                </header>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-4 px-4">
 
                 <div className="grid grid-cols-1 gap-4">
                     <div className="bg-zinc-900/50 rounded-2xl border border-zinc-800 overflow-hidden">
